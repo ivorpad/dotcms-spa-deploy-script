@@ -44,13 +44,16 @@ expect <<- DONE
  expect eof
 DONE
 
-echo "Cleaning out"
+
 touch .env
 cat <<EOT >> .env
   BEARER_TOKEN="${token}"
   NEXT_PUBLIC_DOTCMS_HOST="https://starter.dotcms.com:8443"
 EOT
+
+echo "Preparing deploy"
 vercel --prod
 
+echo "Cleaning the files"
 cd -
 rm -rf ./dotcms-spa
