@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# determine when dotcms finishes deploy
-# fetch a new access token from instance
-# set environment variable in vercel
-# trigger deploy hook in vercel
-
 read_var() {
     VAR=$(grep $1 $2 | xargs)
     IFS="=" read -ra VAR <<< "$VAR"
@@ -12,6 +7,10 @@ read_var() {
 }
 
 DEPLOY_ENDPOINT=$(read_var DEPLOY_ENDPOINT .env)
+
+echo "Cloning the SPA repository"
+git clone https://github.com/dotCMS/dotcms-spa.git
+cd dotcms-spa
 
 echo "Removing existing Vercel environment variable"
 expect <<- DONE
@@ -29,19 +28,29 @@ expect <<- DONE
 DONE
 
 echo "Fetching new access token"
-token=$(curl -k -H "Content-Type:application/json" -X POST -d  '{ "user":"admin@dotcms.com", "password":"admin", "expirationDays": 10 }' https://demo.dotcms.com/api/v1/authentication/api-token | ./jq -r '.entity.token')
- 
+token=$(curl -k -H "Content-Type:application/json" -X POST -d  '{ "user":"admin@dotcms.com", "password":"admin", "expirationDays": 10 }' https://demo.dotcms.com/api/v1/authentication/api-token | jq -r '.entity.token')
+
 echo "Setting Vercel environment variable"
 expect <<- DONE
  set timeout -1
 
  spawn vercel env add BEARER_TOKEN 
- expect "What’s the value of BEARER_TOKEN?"
+ expect "*the value of BEARER_TOKEN?"
  send -- "$token\r"
+ expect "Add BEARER_TOKEN to which*"
  sleep 1
  send "a"
- send -- "\n"
- sleep 1
- spawn curl -X POST $DEPLOY_ENDPOINT
+ send "\n"
  expect eof
 DONE
+
+echo "Cleaning out"
+touch .env
+cat <<EOT >> .env
+  BEARER_TOKEN="${token}"
+  NEXT_PUBLIC_DOTCMS_HOST="https://starter.dotcms.com:8443"
+EOT
+vercel --prod
+
+cd -
+rm -rf ./dotcms-spa
