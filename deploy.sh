@@ -1,16 +1,15 @@
 #!/bin/bash
 
-read_var() {
-    VAR=$(grep $1 $2 | xargs)
-    IFS="=" read -ra VAR <<< "$VAR"
-    echo ${VAR[1]}
-}
-
-DEPLOY_ENDPOINT=$(read_var DEPLOY_ENDPOINT .env)
-
 echo "Cloning the SPA repository"
 git clone https://github.com/dotCMS/dotcms-spa.git
 cd dotcms-spa
+mkdir .vercel
+cd .vercel
+touch project.json
+cat <<EOT >> project.json
+  {"orgId":"team_id","projectId":"project_id"}
+EOT
+cd -
 
 echo "Removing existing Vercel environment variable"
 expect <<- DONE
@@ -53,7 +52,7 @@ EOT
 
 echo "Preparing deploy"
 vercel --prod
-
-echo "Cleaning the files"
 cd -
-rm -rf ./dotcms-spa
+
+# echo "Cleaning the files"
+# rm -rf ./dotcms-spa
