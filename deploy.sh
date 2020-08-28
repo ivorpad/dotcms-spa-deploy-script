@@ -2,8 +2,6 @@ HOST_URL="demo.dotcms.com"
 
 set -o allexport; source .env; set +o allexport
 
-echo ${TEAM_ID}
-
 echo "Creating dotcms-spa dir"
 mkdir dotcms-spa
 cd dotcms-spa
