@@ -49,5 +49,5 @@ echo "Triggering a build in Vercel"
 curl -X POST ${DEPLOY_HOOK}
 echo "\n"
 echo "🧹 Cleaning up the files"
-cd ~/development/deploy_script
+cd ~/deploy_script
 rm -rf dotcms-spa/
